@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
+import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 export const ResultsPage = () => {
   const { attemptId } = useParams<{ attemptId: string }>()
@@ -15,10 +16,10 @@ export const ResultsPage = () => {
     ]
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 60) return 'text-yellow-600'
-    return 'text-red-600'
+  const getScoreColorHex = (score: number) => {
+    if (score >= 80) return '#16a34a'
+    if (score >= 60) return '#ca8a04'
+    return '#dc2626'
   }
 
   const getScoreMessage = (score: number) => {
@@ -29,64 +30,60 @@ export const ResultsPage = () => {
     return 'Review the material and try again!'
   }
 
+  const ringData = [
+    { name: 'score', value: mockResults.score },
+    { name: 'rest', value: 100 - mockResults.score },
+  ]
+
+  const scoreColor = getScoreColorHex(mockResults.score)
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Quiz Results
-        </h1>
-        <div className={`text-6xl font-bold mb-2 ${getScoreColor(mockResults.score)}`}>
-          {mockResults.score}%
-        </div>
-        <p className="text-xl text-gray-600 mb-4">
-          {getScoreMessage(mockResults.score)}
-        </p>
-        <p className="text-gray-600">
-          You answered {mockResults.correctAnswers} out of {mockResults.totalQuestions} questions correctly.
-        </p>
+    <div className="container-wide" style={{ paddingTop: 24, paddingBottom: 24 }}>
+      <div className="hero" style={{ marginBottom: 16 }}>
+        <h1 className="hero-title">Quiz Results</h1>
+        <p className="hero-subtitle">Your score and AI-powered next steps</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Score:</span>
-              <span className={`font-semibold ${getScoreColor(mockResults.score)}`}>
-                {mockResults.score}%
-              </span>
+      <div className="cards-two" style={{ marginBottom: 16 }}>
+        <div className="card card-elevated score-card">
+          <div className="score-ring-wrap">
+            <div style={{ width: '100%', height: 260 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={ringData} dataKey="value" innerRadius={70} outerRadius={90} startAngle={90} endAngle={-270}>
+                    <Cell key="score" fill={scoreColor} />
+                    <Cell key="rest" fill="#e2e8f0" />
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <div className="flex justify-between">
-              <span>Correct Answers:</span>
-              <span>{mockResults.correctAnswers}/{mockResults.totalQuestions}</span>
+            <div className="score-ring-label">
+              <div className="score-percent" style={{ color: scoreColor }}>{mockResults.score}%</div>
+              <div className="score-message">{getScoreMessage(mockResults.score)}</div>
             </div>
-            <div className="flex justify-between">
-              <span>Time Taken:</span>
-              <span>2 minutes 30 seconds</span>
-            </div>
+          </div>
+          <div className="summary-list">
+            <div className="summary-row"><span>Correct Answers</span><span>{mockResults.correctAnswers}/{mockResults.totalQuestions}</span></div>
+            <div className="summary-row"><span>Time Taken</span><span>2 minutes 30 seconds</span></div>
           </div>
         </div>
 
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">AI Study Recommendations</h3>
-          <ul className="space-y-2">
+        <div className="card card-elevated">
+          <h3 className="chart-title" style={{ marginBottom: 10 }}>AI Study Recommendations</h3>
+          <ul className="recommendations">
             {mockResults.recommendations.map((recommendation, index) => (
-              <li key={index} className="flex items-start">
-                <span className="text-blue-500 mr-2">•</span>
-                <span className="text-sm text-gray-700">{recommendation}</span>
+              <li key={index} className="rec-item">
+                <span className="rec-dot" />
+                <span>{recommendation}</span>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <div className="flex justify-center space-x-4">
-        <Link to="/" className="btn btn-primary">
-          Take Another Quiz
-        </Link>
-        <Link to="/progress" className="btn btn-secondary">
-          View Progress
-        </Link>
+      <div className="results-actions">
+        <Link to="/" className="btn btn-primary">Take Another Quiz</Link>
+        <Link to="/progress" className="btn btn-secondary">View Progress</Link>
       </div>
     </div>
   )
