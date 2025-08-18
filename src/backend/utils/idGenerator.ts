@@ -15,3 +15,7 @@ export const generateUserId = (): string => {
 export const generateRecommendationId = (): string => {
   return `rec_${randomBytes(8).toString('hex')}`;
 };
+
+export const generateQuestionId = (): string => {
+  return `q_${randomBytes(6).toString('hex')}`;
+};

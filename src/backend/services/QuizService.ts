@@ -1,15 +1,36 @@
 import { Quiz, QuizAttempt, UserAnswer } from '@shared/types/Quiz';
 import { UserProgress } from '@shared/types/User';
+import { LLMProvider } from '@shared/interfaces/LLMProvider';
 import { QuizModel, QuizAttemptModel } from '../models/QuizModel';
 import { generateQuizId, generateAttemptId } from '../utils/idGenerator';
+import { OpenAIService } from './OpenAIService';
+import { MockLLMService } from './MockLLMService';
+import { config } from '../config/env';
 
 export class QuizService {
+  private llmProvider: LLMProvider;
+
+  constructor(llmProvider?: LLMProvider) {
+    this.llmProvider = llmProvider || this.createDefaultProvider();
+  }
+
+  private createDefaultProvider(): LLMProvider {
+    switch (config.llm.provider) {
+      case 'openai':
+        return new OpenAIService();
+      case 'mock':
+      default:
+        return new MockLLMService();
+    }
+  }
+
   async generateQuiz(topic: string): Promise<Quiz> {
-    // Mock LLM integration - replace with actual LLM service
+    const questions = await this.llmProvider.generateQuizQuestions(topic, 5);
+    
     const quiz: Quiz = {
       id: generateQuizId(),
       topic,
-      questions: this.generateMockQuestions(topic),
+      questions,
       createdAt: new Date()
     };
 
@@ -56,22 +77,6 @@ export class QuizService {
     return attempt;
   }
 
-  private generateMockQuestions(topic: string) {
-    // Mock questions - replace with LLM generation
-    return [
-      {
-        id: '1',
-        question: `What is a key concept in ${topic}?`,
-        options: [
-          { id: 'a', text: 'Option A', value: 'a' },
-          { id: 'b', text: 'Option B', value: 'b' },
-          { id: 'c', text: 'Option C', value: 'c' },
-          { id: 'd', text: 'Option D', value: 'd' }
-        ],
-        correctAnswer: 'a'
-      }
-    ];
-  }
 
   private calculateAnswers(quiz: Quiz, answers: Array<{ questionId: string; selectedAnswer: string }>): UserAnswer[] {
     return answers.map(answer => {

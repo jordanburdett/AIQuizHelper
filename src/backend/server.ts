@@ -1,17 +1,17 @@
+// Load environment variables first
+import { config } from './config/env';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import { connectDatabase } from './utils/database';
 import { quizRoutes } from './routes/quizRoutes';
 import { userRoutes } from './routes/userRoutes';
 import { errorHandler } from './utils/errorHandler';
 
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.port;
 
 // Middleware
 app.use(helmet());
