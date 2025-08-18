@@ -30,6 +30,11 @@ export interface SubmitQuizResponse extends ApiResponse<{
   recommendations: StudyRecommendation[];
 }> {}
 
+export interface GetQuizAttemptResponse extends ApiResponse<{
+  attempt: QuizAttempt;
+  recommendations: StudyRecommendation[];
+}> {}
+
 export interface GetProgressResponse extends ApiResponse<UserProgress[]> {}
 
 export interface GetRecommendationsResponse extends ApiResponse<StudyRecommendation[]> {}

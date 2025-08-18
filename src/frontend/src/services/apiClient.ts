@@ -5,6 +5,7 @@ import type {
   GetQuizResponse,
   SubmitQuizRequest, 
   SubmitQuizResponse,
+  GetQuizAttemptResponse,
   GetProgressResponse,
   GetRecommendationsResponse 
 } from '@shared/interfaces/ApiResponses'
@@ -29,6 +30,11 @@ export const quizApi = {
 
   submitQuiz: async (request: SubmitQuizRequest): Promise<SubmitQuizResponse> => {
     const response = await apiClient.post<SubmitQuizResponse>('/quiz/submit', request)
+    return response.data
+  },
+
+  getQuizAttempt: async (attemptId: string): Promise<GetQuizAttemptResponse> => {
+    const response = await apiClient.get<GetQuizAttemptResponse>(`/quiz/attempt/${attemptId}`)
     return response.data
   },
 }

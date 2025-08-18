@@ -63,6 +63,40 @@ export class QuizController {
     }
   };
 
+  getQuizAttempt = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { attemptId } = req.params;
+      
+      if (!attemptId) {
+        res.status(400).json({
+          success: false,
+          error: 'Attempt ID is required'
+        });
+        return;
+      }
+
+      const attempt = await this.quizService.getQuizAttempt(attemptId);
+      
+      if (!attempt) {
+        res.status(404).json({
+          success: false,
+          error: 'Quiz attempt not found'
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          attempt,
+          recommendations: [] // TODO: Implement recommendations
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   submitQuiz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { quizId, answers } = req.body as SubmitQuizRequest;
