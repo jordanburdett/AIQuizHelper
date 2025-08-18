@@ -15,6 +15,8 @@ export interface GenerateQuizRequest {
 
 export interface GenerateQuizResponse extends ApiResponse<Quiz> {}
 
+export interface GetQuizResponse extends ApiResponse<Quiz> {}
+
 export interface SubmitQuizRequest {
   quizId: string;
   answers: Array<{

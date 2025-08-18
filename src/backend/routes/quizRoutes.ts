@@ -5,6 +5,7 @@ const router = Router();
 const quizController = new QuizController();
 
 router.post('/generate', quizController.generateQuiz);
+router.get('/:quizId', quizController.getQuiz);
 router.post('/submit', quizController.submitQuiz);
 
 export { router as quizRoutes };

@@ -32,6 +32,37 @@ export class QuizController {
     }
   };
 
+  getQuiz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { quizId } = req.params;
+      
+      if (!quizId) {
+        res.status(400).json({
+          success: false,
+          error: 'Quiz ID is required'
+        });
+        return;
+      }
+
+      const quiz = await this.quizService.getQuiz(quizId);
+      
+      if (!quiz) {
+        res.status(404).json({
+          success: false,
+          error: 'Quiz not found'
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: quiz
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   submitQuiz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { quizId, answers } = req.body as SubmitQuizRequest;

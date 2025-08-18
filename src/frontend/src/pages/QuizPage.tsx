@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { quizApi } from '../services/apiClient'
 import type { SubmitQuizRequest } from '@shared/interfaces/ApiResponses'
 
@@ -9,25 +9,11 @@ export const QuizPage = () => {
   const navigate = useNavigate()
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
-  // Mock quiz data - in real app, fetch from API
-  const mockQuiz = {
-    id: quizId || '',
-    topic: 'JavaScript Fundamentals',
-    questions: [
-      {
-        id: '1',
-        question: 'What is a key concept in JavaScript Fundamentals?',
-        options: [
-          { id: 'a', text: 'Variables and Data Types', value: 'a' },
-          { id: 'b', text: 'CSS Styling', value: 'b' },
-          { id: 'c', text: 'Database Design', value: 'c' },
-          { id: 'd', text: 'Network Security', value: 'd' }
-        ],
-        correctAnswer: 'a'
-      }
-    ],
-    createdAt: new Date()
-  }
+  const { data: quizResponse, isLoading, error } = useQuery({
+    queryKey: ['quiz', quizId],
+    queryFn: () => quizApi.getQuiz(quizId!),
+    enabled: !!quizId,
+  })
 
   const submitQuizMutation = useMutation({
     mutationFn: (request: SubmitQuizRequest) => quizApi.submitQuiz(request),
@@ -57,19 +43,43 @@ export const QuizPage = () => {
     })
   }
 
-  const allQuestionsAnswered = mockQuiz.questions.every(q => answers[q.id])
+  if (isLoading) {
+    return (
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 24 }}>
+        <div className="loading">Loading quiz...</div>
+      </div>
+    )
+  }
+
+  if (error || !quizResponse?.success || !quizResponse.data) {
+    return (
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 24 }}>
+        <div className="error">Failed to load quiz. Please try again.</div>
+        <button
+          onClick={() => navigate('/')}
+          className="btn btn-secondary"
+          style={{ marginTop: 16 }}
+        >
+          Back to Home
+        </button>
+      </div>
+    )
+  }
+
+  const quiz = quizResponse.data
+  const allQuestionsAnswered = quiz.questions.every(q => answers[q.id])
 
   return (
     <div className="container" style={{ paddingTop: 24, paddingBottom: 24 }}>
       <div className="hero" style={{ marginBottom: 16 }}>
-        <h1 className="hero-title">Quiz: {mockQuiz.topic}</h1>
+        <h1 className="hero-title">Quiz: {quiz.topic}</h1>
         <p className="hero-subtitle">Answer all questions to see results and get AI study recommendations.</p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        {mockQuiz.questions.map((question, index) => (
+        {quiz.questions.map((question, index) => (
           <div key={question.id} className="card card-elevated question-card">
-            <div className="question-meta">Question {index + 1} of {mockQuiz.questions.length}</div>
+            <div className="question-meta">Question {index + 1} of {quiz.questions.length}</div>
             <p className="question-text">{question.question}</p>
 
             <div className="options-grid">

@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { 
   GenerateQuizRequest, 
   GenerateQuizResponse, 
+  GetQuizResponse,
   SubmitQuizRequest, 
   SubmitQuizResponse,
   GetProgressResponse,
@@ -18,6 +19,11 @@ const apiClient = axios.create({
 export const quizApi = {
   generateQuiz: async (request: GenerateQuizRequest): Promise<GenerateQuizResponse> => {
     const response = await apiClient.post<GenerateQuizResponse>('/quiz/generate', request)
+    return response.data
+  },
+
+  getQuiz: async (quizId: string): Promise<GetQuizResponse> => {
+    const response = await apiClient.get<GetQuizResponse>(`/quiz/${quizId}`)
     return response.data
   },
 
