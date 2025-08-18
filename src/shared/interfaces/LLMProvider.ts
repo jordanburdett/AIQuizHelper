@@ -1,7 +1,15 @@
-import { Question } from '../types/Quiz';
+import { Question, QuizAttempt } from '../types/Quiz';
+
+export interface StudyRecommendation {
+  topic: string;
+  reason: string;
+  resources: string[];
+  priority: 'high' | 'medium' | 'low';
+}
 
 export interface LLMProvider {
   generateQuizQuestions(topic: string, count: number): Promise<Question[]>;
+  generateStudyRecommendations(quizAttempt: QuizAttempt, topic: string): Promise<StudyRecommendation[]>;
 }
 
 export interface LLMConfig {

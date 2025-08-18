@@ -15,12 +15,11 @@ export interface UserProgress {
 }
 
 export interface StudyRecommendation {
-  id: string;
-  userId: string;
+  id?: string;
+  userId?: string;
   topic: string;
-  recommendation: string;
-  priority: RecommendationPriority;
-  createdAt: Date;
+  reason: string;
+  resources: string[];
+  priority: 'low' | 'medium' | 'high';
+  createdAt?: Date;
 }
-
-export type RecommendationPriority = 'low' | 'medium' | 'high' | 'critical';

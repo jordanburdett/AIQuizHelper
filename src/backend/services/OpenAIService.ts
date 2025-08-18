@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { Question } from '@shared/types/Quiz';
-import { LLMProvider, LLMConfig } from '@shared/interfaces/LLMProvider';
+import { Question, QuizAttempt } from '@shared/types/Quiz';
+import { LLMProvider, LLMConfig, StudyRecommendation } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
 import { config as appConfig } from '../config/env';
 
@@ -92,6 +92,87 @@ Requirements:
     } catch (error) {
       console.error('Failed to parse OpenAI response:', error);
       throw new Error('Invalid response format from AI');
+    }
+  }
+
+  async generateStudyRecommendations(quizAttempt: QuizAttempt, topic: string): Promise<StudyRecommendation[]> {
+    const prompt = this.buildRecommendationPrompt(quizAttempt, topic);
+    
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: this.config.model,
+        messages: [{ role: 'user', content: prompt }],
+        max_completion_tokens: this.config.maxTokens,
+      });
+      
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content received from OpenAI');
+      }
+
+      return this.parseRecommendations(content);
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      throw new Error('Failed to generate study recommendations');
+    }
+  }
+
+  private buildRecommendationPrompt(quizAttempt: QuizAttempt, topic: string): string {
+    const correctAnswers = quizAttempt.answers.filter(a => a.isCorrect).length;
+    const totalQuestions = quizAttempt.answers.length;
+    const score = quizAttempt.score;
+    
+    const incorrectQuestions = quizAttempt.answers
+      .filter(a => !a.isCorrect)
+      .map(a => `Question ID: ${a.questionId}, Selected: ${a.selectedAnswer}`)
+      .join('\n');
+
+    return `Analyze this quiz performance and generate personalized study recommendations for the topic "${topic}".
+
+Quiz Performance:
+- Score: ${score}% (${correctAnswers}/${totalQuestions} correct)
+- Time taken: ${Math.round(quizAttempt.timeTaken / 1000)} seconds
+- Incorrect answers: ${incorrectQuestions || 'None - perfect score!'}
+
+Generate 3-5 study recommendations that help improve understanding of areas where the student struggled. Focus on specific subtopics and provide actionable study suggestions.
+
+Format your response as valid JSON with this exact structure:
+{
+  "recommendations": [
+    {
+      "topic": "Specific subtopic to focus on",
+      "reason": "Why this area needs attention based on quiz performance", 
+      "resources": ["Specific study suggestion 1", "Specific study suggestion 2", "Specific study suggestion 3"],
+      "priority": "high"
+    }
+  ]
+}
+
+Requirements:
+- Use priority levels: "high" for critical gaps, "medium" for improvement areas, "low" for advanced topics
+- Make resources specific and actionable (not just "study more")
+- Base recommendations on actual performance gaps
+- If score is perfect, suggest advanced topics to explore next
+- Return valid JSON only, no additional text`;
+  }
+
+  private parseRecommendations(content: string): StudyRecommendation[] {
+    try {
+      const parsed = JSON.parse(content);
+      
+      if (!parsed.recommendations || !Array.isArray(parsed.recommendations)) {
+        throw new Error('Invalid recommendation response format');
+      }
+
+      return parsed.recommendations.map((rec: any) => ({
+        topic: rec.topic,
+        reason: rec.reason,
+        resources: Array.isArray(rec.resources) ? rec.resources : [],
+        priority: ['high', 'medium', 'low'].includes(rec.priority) ? rec.priority : 'medium'
+      }));
+    } catch (error) {
+      console.error('Failed to parse OpenAI recommendations response:', error);
+      throw new Error('Invalid recommendation response format from AI');
     }
   }
 }

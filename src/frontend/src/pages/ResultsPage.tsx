@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { quizApi } from '../services/apiClient'
+import { ThinkingSpinner } from '../components/ThinkingSpinner'
 
 export const ResultsPage = () => {
   const { attemptId } = useParams<{ attemptId: string }>()
@@ -11,6 +12,12 @@ export const ResultsPage = () => {
     queryKey: ['quizAttempt', attemptId],
     queryFn: () => quizApi.getQuizAttempt(attemptId!),
     enabled: !!attemptId,
+  })
+
+  const { data: recommendationsResponse, isLoading: isLoadingRecommendations, error: recommendationsError } = useQuery({
+    queryKey: ['recommendations', attemptId],
+    queryFn: () => quizApi.generateRecommendations(attemptId!),
+    enabled: !!attemptId && !!attemptResponse?.success,
   })
 
   const getScoreColorHex = (score: number) => {
@@ -50,7 +57,8 @@ export const ResultsPage = () => {
     )
   }
 
-  const { attempt, recommendations } = attemptResponse.data
+  const { attempt } = attemptResponse.data
+  const recommendations = recommendationsResponse?.success ? recommendationsResponse.data : []
   const totalQuestions = attempt.answers.length
   const correctAnswers = attempt.answers.filter(answer => answer.isCorrect).length
 
@@ -94,18 +102,61 @@ export const ResultsPage = () => {
 
         <div className="card card-elevated">
           <h3 className="chart-title" style={{ marginBottom: 10 }}>AI Study Recommendations</h3>
-          {recommendations.length > 0 ? (
-            <ul className="recommendations">
+          {isLoadingRecommendations ? (
+            <ThinkingSpinner type="recommendations" />
+          ) : recommendationsError ? (
+            <p style={{ color: '#dc2626', margin: 0 }}>
+              Failed to generate recommendations. Please try refreshing the page.
+            </p>
+          ) : recommendations.length > 0 ? (
+            <div className="recommendations">
               {recommendations.map((recommendation, index) => (
-                <li key={index} className="rec-item">
-                  <span className="rec-dot" />
-                  <span>{recommendation.text}</span>
-                </li>
+                <div key={index} style={{ marginBottom: 16 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 8, 
+                    marginBottom: 8,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: recommendation.priority === 'high' ? '#dc2626' : recommendation.priority === 'medium' ? '#ca8a04' : '#16a34a'
+                  }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: recommendation.priority === 'high' ? '#dc2626' : recommendation.priority === 'medium' ? '#ca8a04' : '#16a34a'
+                    }} />
+                    {recommendation.topic}
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      backgroundColor: recommendation.priority === 'high' ? '#fef2f2' : recommendation.priority === 'medium' ? '#fefbeb' : '#f0fdf4',
+                      color: recommendation.priority === 'high' ? '#991b1b' : recommendation.priority === 'medium' ? '#92400e' : '#166534'
+                    }}>
+                      {recommendation.priority}
+                    </span>
+                  </div>
+                  <p style={{ color: '#475569', margin: '0 0 8px 16px', fontSize: 14 }}>
+                    {recommendation.reason}
+                  </p>
+                  <ul style={{ margin: '0 0 0 16px', padding: 0, listStyle: 'none' }}>
+                    {recommendation.resources.map((resource, resourceIndex) => (
+                      <li key={resourceIndex} className="rec-item" style={{ fontSize: 14 }}>
+                        <span className="rec-dot" />
+                        <span>{resource}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <p style={{ color: '#64748b', margin: 0 }}>
-              Study recommendations will be generated here in the future based on your quiz performance.
+              No specific recommendations needed. Great performance!
             </p>
           )}
         </div>

@@ -7,7 +7,8 @@ import type {
   SubmitQuizResponse,
   GetQuizAttemptResponse,
   GetProgressResponse,
-  GetRecommendationsResponse 
+  GetRecommendationsResponse,
+  GenerateRecommendationsResponse
 } from '@shared/interfaces/ApiResponses'
 
 const apiClient = axios.create({
@@ -35,6 +36,11 @@ export const quizApi = {
 
   getQuizAttempt: async (attemptId: string): Promise<GetQuizAttemptResponse> => {
     const response = await apiClient.get<GetQuizAttemptResponse>(`/quiz/attempt/${attemptId}`)
+    return response.data
+  },
+
+  generateRecommendations: async (attemptId: string): Promise<GenerateRecommendationsResponse> => {
+    const response = await apiClient.post<GenerateRecommendationsResponse>(`/quiz/attempt/${attemptId}/recommendations`)
     return response.data
   },
 }

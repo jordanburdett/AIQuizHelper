@@ -38,3 +38,5 @@ export interface GetQuizAttemptResponse extends ApiResponse<{
 export interface GetProgressResponse extends ApiResponse<UserProgress[]> {}
 
 export interface GetRecommendationsResponse extends ApiResponse<StudyRecommendation[]> {}
+
+export interface GenerateRecommendationsResponse extends ApiResponse<StudyRecommendation[]> {}

@@ -1,5 +1,5 @@
-import { Question } from '@shared/types/Quiz';
-import { LLMProvider } from '@shared/interfaces/LLMProvider';
+import { Question, QuizAttempt } from '@shared/types/Quiz';
+import { LLMProvider, StudyRecommendation } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
 
 export class MockLLMService implements LLMProvider {
@@ -22,5 +22,35 @@ export class MockLLMService implements LLMProvider {
     }
 
     return questions;
+  }
+
+  async generateStudyRecommendations(quizAttempt: QuizAttempt, topic: string): Promise<StudyRecommendation[]> {
+    // Mock implementation for testing/development
+    const score = quizAttempt.score;
+    
+    const recommendations: StudyRecommendation[] = [
+      {
+        topic: `Advanced ${topic} Concepts`,
+        reason: `Based on your ${score}% score, you could benefit from deeper understanding of core principles`,
+        resources: [
+          'Review fundamental concepts and definitions',
+          'Practice with additional exercises',
+          'Explore real-world applications'
+        ],
+        priority: score < 70 ? 'high' : score < 85 ? 'medium' : 'low'
+      },
+      {
+        topic: `${topic} Problem Solving`,
+        reason: 'Strengthen analytical skills in this subject area',
+        resources: [
+          'Work through step-by-step examples',
+          'Join study groups or forums',
+          'Take practice quizzes'
+        ],
+        priority: 'medium'
+      }
+    ];
+
+    return recommendations;
   }
 }

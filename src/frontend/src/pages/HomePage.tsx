@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { quizApi } from '../services/apiClient'
+import { ThinkingSpinner } from '../components/ThinkingSpinner'
 import type { GenerateQuizRequest } from '@shared/interfaces/ApiResponses'
 
 export const HomePage = () => {
@@ -32,35 +33,40 @@ export const HomePage = () => {
       </div>
 
       <div className="card card-elevated">
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="topic" className="form-label">
-              What would you like to be quizzed on?
-            </label>
-            <input
-              id="topic"
-              type="text"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g., JavaScript fundamentals, World War II, Calculus..."
-              className="form-input input-lg"
-              disabled={generateQuizMutation.isPending}
-            />
-          </div>
+        {generateQuizMutation.isPending ? (
+          <ThinkingSpinner type="quiz-generation" />
+        ) : (
+          <>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="topic" className="form-label">
+                  What would you like to be quizzed on?
+                </label>
+                <input
+                  id="topic"
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="e.g., JavaScript fundamentals, World War II, Calculus..."
+                  className="form-input input-lg"
+                />
+              </div>
 
-          <button
-            type="submit"
-            disabled={!topic.trim() || generateQuizMutation.isPending}
-            className="btn btn-primary btn-lg w-full"
-          >
-            {generateQuizMutation.isPending ? 'Generating Quiz...' : 'Generate Quiz'}
-          </button>
-        </form>
+              <button
+                type="submit"
+                disabled={!topic.trim()}
+                className="btn btn-primary btn-lg w-full"
+              >
+                Generate Quiz
+              </button>
+            </form>
 
-        {generateQuizMutation.error && (
-          <div className="error mt-4">
-            Failed to generate quiz. Please try again.
-          </div>
+            {generateQuizMutation.error && (
+              <div className="error mt-4">
+                Failed to generate quiz. Please try again.
+              </div>
+            )}
+          </>
         )}
       </div>
 

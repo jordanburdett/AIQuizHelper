@@ -1,5 +1,5 @@
 import { Quiz, QuizAttempt, UserAnswer } from '@shared/types/Quiz';
-import { UserProgress } from '@shared/types/User';
+import { UserProgress, StudyRecommendation } from '@shared/types/User';
 import { LLMProvider } from '@shared/interfaces/LLMProvider';
 import { QuizModel, QuizAttemptModel } from '../models/QuizModel';
 import { generateQuizId, generateAttemptId } from '../utils/idGenerator';
@@ -155,5 +155,19 @@ export class QuizService {
   private calculateScore(answers: UserAnswer[]): number {
     const correctAnswers = answers.filter(answer => answer.isCorrect).length;
     return Math.round((correctAnswers / answers.length) * 100);
+  }
+
+  async generateStudyRecommendations(attemptId: string): Promise<StudyRecommendation[]> {
+    const attempt = await this.getQuizAttempt(attemptId);
+    if (!attempt) {
+      throw new Error('Quiz attempt not found');
+    }
+
+    const quiz = await this.getQuiz(attempt.quizId);
+    if (!quiz) {
+      throw new Error('Quiz not found');
+    }
+
+    return await this.llmProvider.generateStudyRecommendations(attempt, quiz.topic);
   }
 }

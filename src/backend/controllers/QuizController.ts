@@ -122,4 +122,27 @@ export class QuizController {
       next(error);
     }
   };
+
+  generateRecommendations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { attemptId } = req.params;
+      
+      if (!attemptId) {
+        res.status(400).json({
+          success: false,
+          error: 'Attempt ID is required'
+        });
+        return;
+      }
+
+      const recommendations = await this.quizService.generateStudyRecommendations(attemptId);
+      
+      res.json({
+        success: true,
+        data: recommendations
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
