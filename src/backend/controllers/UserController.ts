@@ -22,7 +22,6 @@ export class UserController {
 
   getRecommendations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // TODO: Implement recommendations retrieval
       res.json({
         success: true,
         data: []

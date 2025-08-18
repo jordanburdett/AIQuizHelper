@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { quizApi } from '../services/apiClient'
 import { ThinkingSpinner } from '../components/ThinkingSpinner'
@@ -8,7 +8,29 @@ import type { GenerateQuizRequest } from '@shared/interfaces/ApiResponses'
 export const HomePage = () => {
   const [topic, setTopic] = useState('')
   const [effort, setEffort] = useState<'speed' | 'balanced' | 'quality'>('balanced')
+  const [selectedProvider, setSelectedProvider] = useState<string>('')
   const navigate = useNavigate()
+
+  const { data: configResponse, refetch: refetchConfig } = useQuery({
+    queryKey: ['config'],
+    queryFn: () => quizApi.getConfig(),
+  })
+
+  const setProviderMutation = useMutation({
+    mutationFn: (provider: string) => quizApi.setProvider({ provider }),
+    onSuccess: () => {
+      refetchConfig()
+    },
+  })
+
+  const config = configResponse?.data
+  const showModelSelector = config?.showModelSelector || false
+  const showEffortSelection = config?.currentProvider !== 'gemini'
+  
+  // Set default provider when config loads
+  if (config && !selectedProvider) {
+    setSelectedProvider(config.defaultProvider)
+  }
 
   const generateQuizMutation = useMutation({
     mutationFn: (request: GenerateQuizRequest) => quizApi.generateQuiz(request),
@@ -19,10 +41,19 @@ export const HomePage = () => {
     },
   })
 
+  const handleProviderChange = (provider: string) => {
+    setSelectedProvider(provider)
+    setProviderMutation.mutate(provider)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (topic.trim()) {
-      generateQuizMutation.mutate({ topic: topic.trim(), effort })
+      const request: GenerateQuizRequest = { topic: topic.trim() }
+      if (showEffortSelection) {
+        request.effort = effort
+      }
+      generateQuizMutation.mutate(request)
     }
   }
 
@@ -39,6 +70,29 @@ export const HomePage = () => {
         ) : (
           <>
             <form onSubmit={handleSubmit}>
+              {showModelSelector && (
+                <div className="form-group">
+                  <label htmlFor="model" className="form-label">
+                    AI Model
+                  </label>
+                  <select
+                    id="model"
+                    className="form-input"
+                    value={selectedProvider}
+                    onChange={(e) => handleProviderChange(e.target.value)}
+                  >
+                    {config?.availableProviders.map((provider) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name} ({provider.model})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="form-help">
+                    Select the AI model to generate your quiz questions.
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label htmlFor="topic" className="form-label">
                   What would you like to be quizzed on?
@@ -53,24 +107,26 @@ export const HomePage = () => {
                 />
               </div>
 
-              <div className="form-group mt-4">
-                <label htmlFor="effort" className="form-label">
-                  Effort (speed vs quality)
-                </label>
-                <select
-                  id="effort"
-                  className="form-input"
-                  value={effort}
-                  onChange={(e) => setEffort(e.target.value as 'speed' | 'balanced' | 'quality')}
-                >
-                  <option value="speed">Speed — fastest responses</option>
-                  <option value="balanced">Balanced — good trade-off</option>
-                  <option value="quality">Quality — best question quality</option>
-                </select>
-                <div className="form-help">
-                  Speed reduces depth for quicker generation; Quality increases depth for richer questions.
+              {showEffortSelection && (
+                <div className="form-group mt-4">
+                  <label htmlFor="effort" className="form-label">
+                    Effort (speed vs quality)
+                  </label>
+                  <select
+                    id="effort"
+                    className="form-input"
+                    value={effort}
+                    onChange={(e) => setEffort(e.target.value as 'speed' | 'balanced' | 'quality')}
+                  >
+                    <option value="speed">Speed — fastest responses</option>
+                    <option value="balanced">Balanced — good trade-off</option>
+                    <option value="quality">Quality — best question quality</option>
+                  </select>
+                  <div className="form-help">
+                    Speed reduces depth for quicker generation; Quality increases depth for richer questions.
+                  </div>
                 </div>
-              </div>
+              )}
 
               <button
                 type="submit"

@@ -34,11 +34,11 @@ export const ResultsPage = () => {
   }
 
   const getScoreMessage = (score: number) => {
-    if (score >= 90) return 'Excellent work!'
+    if (score >= 90) return 'Excellent!'
     if (score >= 80) return 'Great job!'
-    if (score >= 70) return 'Good effort!'
-    if (score >= 60) return 'Keep practicing!'
-    return 'Review the material and try again!'
+    if (score >= 70) return 'Good work!'
+    if (score >= 60) return 'Keep trying!'
+    return 'Try again!'
   }
 
   if (isLoading) {

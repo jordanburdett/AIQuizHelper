@@ -24,6 +24,7 @@ export interface SubmitQuizRequest {
     questionId: string;
     selectedAnswer: string;
   }>;
+  timeTaken?: number;
 }
 
 export interface SubmitQuizResponse extends ApiResponse<{
@@ -43,3 +44,20 @@ export interface GetRecommendationsResponse extends ApiResponse<StudyRecommendat
 export interface GenerateRecommendationsResponse extends ApiResponse<StudyRecommendation[]> {}
 
 export interface GetQuestionExplanationResponse extends ApiResponse<{ explanation: string }> {}
+
+export interface GetConfigResponse extends ApiResponse<{
+  currentProvider: string;
+  availableProviders: Array<{
+    id: string;
+    name: string;
+    model: string;
+  }>;
+  defaultProvider: string;
+  showModelSelector: boolean;
+}> {}
+
+export interface SetProviderRequest {
+  provider: string;
+}
+
+export interface SetProviderResponse extends ApiResponse<{ currentProvider: string }> {}

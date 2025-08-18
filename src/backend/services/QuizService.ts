@@ -4,6 +4,7 @@ import { LLMProvider } from '@shared/interfaces/LLMProvider';
 import { QuizModel, QuizAttemptModel } from '../models/QuizModel';
 import { generateQuizId, generateAttemptId } from '../utils/idGenerator';
 import { OpenAIService } from './OpenAIService';
+import { GeminiService } from './GeminiService';
 import { MockLLMService } from './MockLLMService';
 import { config } from '../config/env';
 
@@ -18,6 +19,8 @@ export class QuizService {
     switch (config.llm.provider) {
       case 'openai':
         return new OpenAIService();
+      case 'gemini':
+        return new GeminiService();
       case 'mock':
       default:
         return new MockLLMService();
@@ -52,7 +55,8 @@ export class QuizService {
 
   async submitQuizAttempt(
     quizId: string, 
-    answers: Array<{ questionId: string; selectedAnswer: string }>
+    answers: Array<{ questionId: string; selectedAnswer: string }>,
+    timeTaken?: number
   ): Promise<QuizAttempt> {
     const quiz = await this.getQuiz(quizId);
     if (!quiz) {
@@ -68,7 +72,7 @@ export class QuizService {
       answers: userAnswers,
       score,
       completedAt: new Date(),
-      timeTaken: 0 // TODO: Implement time tracking
+      timeTaken: timeTaken || 0
     };
 
     const attemptModel = new QuizAttemptModel(attempt);
