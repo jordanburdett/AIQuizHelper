@@ -1,12 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
+import { QuizService } from '../services/QuizService';
 
 export class UserController {
+  private quizService: QuizService;
+
+  constructor() {
+    this.quizService = new QuizService();
+  }
+
   getProgress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // TODO: Implement user progress retrieval
+      const progress = await this.quizService.getUserProgress();
       res.json({
         success: true,
-        data: []
+        data: progress
       });
     } catch (error) {
       next(error);

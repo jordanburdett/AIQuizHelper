@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   ResponsiveContainer,
   BarChart,
@@ -7,8 +8,6 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  LineChart,
-  Line,
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
@@ -18,32 +17,13 @@ import {
   Pie,
   Cell,
 } from 'recharts'
+import { userApi } from '../services/apiClient'
 
 export const ProgressPage = () => {
-  // Mock progress data - in real app, fetch from API
-  const mockProgress = [
-    {
-      topic: 'JavaScript Fundamentals',
-      totalQuizzes: 5,
-      averageScore: 78,
-      bestScore: 90,
-      lastQuizDate: '2024-03-15'
-    },
-    {
-      topic: 'React Basics',
-      totalQuizzes: 3,
-      averageScore: 85,
-      bestScore: 95,
-      lastQuizDate: '2024-03-14'
-    },
-    {
-      topic: 'TypeScript',
-      totalQuizzes: 2,
-      averageScore: 72,
-      bestScore: 80,
-      lastQuizDate: '2024-03-13'
-    }
-  ]
+  const { data: progressResponse, isLoading, error } = useQuery({
+    queryKey: ['userProgress'],
+    queryFn: () => userApi.getProgress(),
+  })
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600'
@@ -51,12 +31,39 @@ export const ProgressPage = () => {
     return 'text-red-600'
   }
 
-  const barData = mockProgress.map((t) => ({ topic: t.topic, average: t.averageScore }))
-  const pieData = mockProgress.map((t) => ({ name: t.topic, value: t.totalQuizzes }))
-  const radarData = mockProgress.map((t) => ({ subject: t.topic, score: t.averageScore }))
+  if (isLoading) {
+    return (
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 24 }}>
+        <div className="loading">Loading progress data...</div>
+      </div>
+    )
+  }
+
+  if (error || !progressResponse?.success) {
+    return (
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 24 }}>
+        <div className="error">Failed to load progress data. Please try again.</div>
+        <Link to="/" className="btn btn-secondary" style={{ marginTop: 16 }}>
+          Back to Home
+        </Link>
+      </div>
+    )
+  }
+
+  const progressData = progressResponse.data || []
+  
+  // Convert Date objects to strings for display and fix type compatibility
+  const displayProgress = progressData.map(item => ({
+    ...item,
+    lastQuizDate: new Date(item.lastQuizDate).toISOString().split('T')[0]
+  }))
+
+  const barData = displayProgress.map((t) => ({ topic: t.topic, average: t.averageScore }))
+  const pieData = displayProgress.map((t) => ({ name: t.topic, value: t.totalQuizzes }))
+  const radarData = displayProgress.map((t) => ({ subject: t.topic, score: t.averageScore }))
 
   const pieColors = ['#60a5fa', '#34d399', '#f472b6', '#fbbf24', '#a78bfa']
-  const topicsCount = mockProgress.length
+  const topicsCount = displayProgress.length
   const isManyTopics = topicsCount > 3
 
   return (
@@ -66,7 +73,7 @@ export const ProgressPage = () => {
         <p className="hero-subtitle">Track your quiz performance across topics over time.</p>
       </div>
 
-      {mockProgress.length === 0 ? (
+      {displayProgress.length === 0 ? (
         <div className="card text-center">
           <h3 className="text-lg font-semibold mb-4">No Quiz History Yet</h3>
           <p className="text-gray-600 mb-6">
@@ -81,20 +88,20 @@ export const ProgressPage = () => {
           <div className="cards-grid">
             <div className="stat-card">
               <div className="stat-value text-blue-600">
-                {mockProgress.reduce((sum, topic) => sum + topic.totalQuizzes, 0)}
+                {displayProgress.reduce((sum, topic) => sum + topic.totalQuizzes, 0)}
               </div>
               <div className="stat-label">Total Quizzes</div>
             </div>
             <div className="stat-card">
               <div className="stat-value text-green-600">
-                {Math.round(
-                  mockProgress.reduce((sum, topic) => sum + topic.averageScore, 0) / mockProgress.length
-                )}%
+                {displayProgress.length > 0 ? Math.round(
+                  displayProgress.reduce((sum, topic) => sum + topic.averageScore, 0) / displayProgress.length
+                ) : 0}%
               </div>
               <div className="stat-label">Overall Average</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value text-purple-600">{mockProgress.length}</div>
+              <div className="stat-value text-purple-600">{displayProgress.length}</div>
               <div className="stat-label">Topics Studied</div>
             </div>
           </div>
