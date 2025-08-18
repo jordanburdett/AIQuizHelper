@@ -11,7 +11,7 @@ export class QuizController {
 
   generateQuiz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { topic } = req.body as GenerateQuizRequest;
+      const { topic, effort } = req.body as GenerateQuizRequest;
       
       if (!topic) {
         res.status(400).json({
@@ -21,7 +21,7 @@ export class QuizController {
         return;
       }
 
-      const quiz = await this.quizService.generateQuiz(topic);
+      const quiz = await this.quizService.generateQuiz(topic, effort);
       
       res.json({
         success: true,
@@ -140,6 +140,29 @@ export class QuizController {
       res.json({
         success: true,
         data: recommendations
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getQuestionExplanation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { quizId, questionId } = req.params;
+      
+      if (!quizId || !questionId) {
+        res.status(400).json({
+          success: false,
+          error: 'Quiz ID and Question ID are required'
+        });
+        return;
+      }
+
+      const explanation = await this.quizService.getQuestionExplanation(quizId, questionId);
+      
+      res.json({
+        success: true,
+        data: explanation
       });
     } catch (error) {
       next(error);

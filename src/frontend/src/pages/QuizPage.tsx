@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { quizApi } from '../services/apiClient'
@@ -8,6 +8,21 @@ export const QuizPage = () => {
   const { quizId } = useParams<{ quizId: string }>()
   const navigate = useNavigate()
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [startTime] = useState<number>(Date.now())
+  const [currentTime, setCurrentTime] = useState<number>(Date.now())
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 1000)
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
 
   const { data: quizResponse, isLoading, error } = useQuery({
     queryKey: ['quiz', quizId],
@@ -32,14 +47,20 @@ export const QuizPage = () => {
     e.preventDefault()
     if (!quizId) return
 
+    const timeTaken = Math.floor((Date.now() - startTime) / 1000)
     const formattedAnswers = Object.entries(answers).map(([questionId, selectedAnswer]) => ({
       questionId,
       selectedAnswer
     }))
 
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
+
     submitQuizMutation.mutate({
       quizId,
-      answers: formattedAnswers
+      answers: formattedAnswers,
+      timeTaken
     })
   }
 
@@ -68,12 +89,21 @@ export const QuizPage = () => {
 
   const quiz = quizResponse.data
   const allQuestionsAnswered = quiz.questions.every(q => answers[q.id])
+  const elapsedSeconds = Math.floor((currentTime - startTime) / 1000)
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60)
+  const remainingSeconds = elapsedSeconds % 60
 
   return (
     <div className="container" style={{ paddingTop: 24, paddingBottom: 24 }}>
       <div className="hero" style={{ marginBottom: 16 }}>
         <h1 className="hero-title">Quiz: {quiz.topic}</h1>
         <p className="hero-subtitle">Answer all questions to see results and get AI study recommendations.</p>
+      </div>
+      
+      <div className="card" style={{ marginBottom: 16, textAlign: 'center' }}>
+        <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1a202c' }}>
+          Time Elapsed: {elapsedMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>

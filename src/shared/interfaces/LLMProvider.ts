@@ -8,8 +8,9 @@ export interface StudyRecommendation {
 }
 
 export interface LLMProvider {
-  generateQuizQuestions(topic: string, count: number): Promise<Question[]>;
+  generateQuizQuestions(topic: string, count: number, effort?: 'speed' | 'balanced' | 'quality'): Promise<Question[]>;
   generateStudyRecommendations(quizAttempt: QuizAttempt, topic: string): Promise<StudyRecommendation[]>;
+  generateQuestionExplanation(question: Question, topic: string): Promise<string>;
 }
 
 export interface LLMConfig {

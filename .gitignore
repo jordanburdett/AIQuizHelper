@@ -53,6 +53,15 @@ jspm_packages/
 # TypeScript cache
 *.tsbuildinfo
 
+# TypeScript compilation artifacts in source directories
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+src/**/*.d.ts.map
+# But keep the frontend entry points
+!src/frontend/src/**/*.tsx
+!src/frontend/src/**/*.ts
+
 # Optional npm cache directory
 .npm
 

@@ -7,6 +7,7 @@ import type { GenerateQuizRequest } from '@shared/interfaces/ApiResponses'
 
 export const HomePage = () => {
   const [topic, setTopic] = useState('')
+  const [effort, setEffort] = useState<'speed' | 'balanced' | 'quality'>('balanced')
   const navigate = useNavigate()
 
   const generateQuizMutation = useMutation({
@@ -21,7 +22,7 @@ export const HomePage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (topic.trim()) {
-      generateQuizMutation.mutate({ topic: topic.trim() })
+      generateQuizMutation.mutate({ topic: topic.trim(), effort })
     }
   }
 
@@ -50,6 +51,25 @@ export const HomePage = () => {
                   placeholder="e.g., JavaScript fundamentals, World War II, Calculus..."
                   className="form-input input-lg"
                 />
+              </div>
+
+              <div className="form-group mt-4">
+                <label htmlFor="effort" className="form-label">
+                  Effort (speed vs quality)
+                </label>
+                <select
+                  id="effort"
+                  className="form-input"
+                  value={effort}
+                  onChange={(e) => setEffort(e.target.value as 'speed' | 'balanced' | 'quality')}
+                >
+                  <option value="speed">Speed — fastest responses</option>
+                  <option value="balanced">Balanced — good trade-off</option>
+                  <option value="quality">Quality — best question quality</option>
+                </select>
+                <div className="form-help">
+                  Speed reduces depth for quicker generation; Quality increases depth for richer questions.
+                </div>
               </div>
 
               <button

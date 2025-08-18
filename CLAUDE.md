@@ -9,17 +9,22 @@ AI Quiz Helper is a TypeScript-based web application that generates personalized
 ## Development Commands
 
 - `npm install` - Installs all dependencies for both frontend and backend
-- `npm start` - Concurrently starts Express server and React frontend with Vite
-- `npm run lint` - Run linting (when available)
-- `npm run typecheck` - Run TypeScript type checking (when available)
+- `npm start` - Concurrently starts Express server (port 3001) and React frontend (port 3000) with Vite
+- `npm run build` - Build both frontend and backend for production
+- `npm run frontend:dev` - Start only the frontend development server
+- `npm run backend:dev` - Start only the backend development server
+- `npm run lint` - Run ESLint across the codebase
+- `npm run typecheck` - Run TypeScript type checking for both frontend and backend
+- `npm test` - Run Jest test suite
 
 ## Architecture Overview
 
 ### Technology Stack
-- **Frontend**: React + TypeScript + Vite
-- **Backend**: Node.js + Express + TypeScript  
+- **Frontend**: React 18 + TypeScript + Vite + Chakra UI + React Query + React Router
+- **Backend**: Node.js + Express + TypeScript + Mongoose + OpenAI/Anthropic APIs
 - **Database**: MongoDB
-- **AI Integration**: LLM for quiz generation and study recommendations
+- **Development**: Concurrently, TSX, ESLint, Jest
+- **AI Integration**: LLM services for quiz generation and study recommendations
 
 ### Project Structure
 ```
@@ -69,3 +74,32 @@ src/
 - Simple unified npm project structure
 - Hot reload with Vite for fast development cycles
 - Concurrent frontend and backend execution
+
+## Path Aliases and Module Resolution
+
+The project uses TypeScript path mapping for clean imports:
+- `@shared/*` → `src/shared/*` (shared types and interfaces)
+- `@backend/*` → `src/backend/*` (backend-specific imports)
+- `@frontend/*` → `src/frontend/*` (frontend-specific imports)
+- `@` → `src/frontend/src` (frontend internal imports)
+
+Both frontend and backend can import shared types directly using the `@shared` alias.
+
+## Environment Setup
+
+Backend requires environment configuration:
+- Copy `src/backend/.env.example` to `src/backend/.env`
+- Configure MongoDB URI and LLM API keys
+- Frontend proxies `/api/*` requests to backend on port 3001
+
+## Key Service Interfaces
+
+**LLMProvider Interface**: Standardizes AI service integration
+- `generateQuizQuestions()` - Creates quiz questions for topics
+- `generateStudyRecommendations()` - Provides personalized study advice
+- `generateQuestionExplanation()` - Explains question answers
+
+**Quiz Data Flow**: 
+- Questions generated via LLM with configurable effort levels (speed/balanced/quality)
+- Attempts tracked with scoring and timing
+- Historical data used for progress analytics and recommendations

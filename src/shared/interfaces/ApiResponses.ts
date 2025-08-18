@@ -11,6 +11,7 @@ export interface ApiResponse<T> {
 export interface GenerateQuizRequest {
   topic: string;
   difficulty?: 'easy' | 'medium' | 'hard';
+  effort?: 'speed' | 'balanced' | 'quality';
 }
 
 export interface GenerateQuizResponse extends ApiResponse<Quiz> {}
@@ -40,3 +41,5 @@ export interface GetProgressResponse extends ApiResponse<UserProgress[]> {}
 export interface GetRecommendationsResponse extends ApiResponse<StudyRecommendation[]> {}
 
 export interface GenerateRecommendationsResponse extends ApiResponse<StudyRecommendation[]> {}
+
+export interface GetQuestionExplanationResponse extends ApiResponse<{ explanation: string }> {}

@@ -24,8 +24,8 @@ export class QuizService {
     }
   }
 
-  async generateQuiz(topic: string): Promise<Quiz> {
-    const questions = await this.llmProvider.generateQuizQuestions(topic, 5);
+  async generateQuiz(topic: string, effort?: 'speed' | 'balanced' | 'quality'): Promise<Quiz> {
+    const questions = await this.llmProvider.generateQuizQuestions(topic, 5, effort);
     
     const quiz: Quiz = {
       id: generateQuizId(),
@@ -169,5 +169,20 @@ export class QuizService {
     }
 
     return await this.llmProvider.generateStudyRecommendations(attempt, quiz.topic);
+  }
+
+  async getQuestionExplanation(quizId: string, questionId: string): Promise<{ explanation: string }> {
+    const quiz = await this.getQuiz(quizId);
+    if (!quiz) {
+      throw new Error('Quiz not found');
+    }
+
+    const question = quiz.questions.find(q => q.id === questionId);
+    if (!question) {
+      throw new Error('Question not found');
+    }
+
+    const explanation = await this.llmProvider.generateQuestionExplanation(question, quiz.topic);
+    return { explanation };
   }
 }
