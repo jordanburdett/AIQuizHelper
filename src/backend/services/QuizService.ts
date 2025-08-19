@@ -1,6 +1,7 @@
 import { Quiz, QuizAttempt, UserAnswer } from '@shared/types/Quiz';
 import { UserProgress, StudyRecommendation } from '@shared/types/User';
 import { LLMProvider } from '@shared/interfaces/LLMProvider';
+import { QuizHistoryItem, QuizHistorySummary } from '@shared/interfaces/ApiResponses';
 import { QuizModel, QuizAttemptModel } from '../models/QuizModel';
 import { generateQuizId, generateAttemptId } from '../utils/idGenerator';
 import { GeminiService } from './GeminiService';
@@ -185,5 +186,67 @@ export class QuizService {
 
     const explanation = await this.llmProvider.generateQuestionExplanation(question, quiz.topic);
     return { explanation };
+  }
+
+  async getQuizHistory(): Promise<QuizHistoryItem[]> {
+    try {
+      const quizzes = await QuizModel
+        .find({})
+        .select({ id: 1, topic: 1, createdAt: 1, questions: 1 })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .exec();
+      
+      if (!quizzes || quizzes.length === 0) {
+        return [];
+      }
+      
+      const quizIds = quizzes.map(q => q.id);
+      
+      const attempts = await QuizAttemptModel
+        .find({ quizId: { $in: quizIds } })
+        .select({ id: 1, quizId: 1, score: 1, completedAt: 1, timeTaken: 1 })
+        .sort({ completedAt: -1 })
+        .exec();
+      
+      const attemptMap = new Map<string, any>();
+      for (const attempt of attempts) {
+        if (!attemptMap.has(attempt.quizId)) {
+          attemptMap.set(attempt.quizId, attempt);
+        }
+      }
+      
+      const quizHistory: QuizHistoryItem[] = quizzes.map(quiz => {
+        const quizSummary: QuizHistorySummary = {
+          id: quiz.id,
+          topic: quiz.topic,
+          createdAt: quiz.createdAt,
+          questionCount: quiz.questions?.length || 0
+        };
+        
+        const attempt = attemptMap.get(quiz.id);
+        
+        if (attempt) {
+          return {
+            quiz: quizSummary,
+            latestAttempt: {
+              id: attempt.id,
+              quizId: attempt.quizId,
+              answers: [],
+              score: attempt.score,
+              completedAt: attempt.completedAt,
+              timeTaken: attempt.timeTaken || 0
+            }
+          };
+        }
+        
+        return { quiz: quizSummary };
+      });
+      
+      return quizHistory;
+    } catch (error) {
+      console.error('Error in getQuizHistory:', error);
+      return [];
+    }
   }
 }

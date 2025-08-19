@@ -49,3 +49,17 @@ export interface GetConfigResponse extends ApiResponse<{
   provider: string;
   model: string;
 }> {}
+
+export interface QuizHistorySummary {
+  id: string;
+  topic: string;
+  createdAt: Date;
+  questionCount: number;
+}
+
+export interface QuizHistoryItem {
+  quiz: QuizHistorySummary;
+  latestAttempt?: QuizAttempt;
+}
+
+export interface GetQuizHistoryResponse extends ApiResponse<QuizHistoryItem[]> {}

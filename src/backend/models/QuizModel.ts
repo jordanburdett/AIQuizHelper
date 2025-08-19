@@ -36,5 +36,9 @@ const quizAttemptSchema = new Schema<QuizAttemptDocument>({
   timeTaken: { type: Number, required: true }
 });
 
+// Add indexes for better query performance
+quizSchema.index({ createdAt: -1 });
+quizAttemptSchema.index({ quizId: 1, completedAt: -1 });
+
 export const QuizModel = mongoose.model<QuizDocument>('Quiz', quizSchema);
 export const QuizAttemptModel = mongoose.model<QuizAttemptDocument>('QuizAttempt', quizAttemptSchema);

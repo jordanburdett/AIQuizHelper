@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { quizApi } from '../services/apiClient'
 import { ThinkingSpinner } from '../components/ThinkingSpinner'
+import { QuizHistory } from '../components/QuizHistory'
 import type { GenerateQuizRequest } from '@shared/interfaces/ApiResponses'
 
 export const HomePage = () => {
@@ -80,6 +81,8 @@ export const HomePage = () => {
           <div className="feature-pill">🎯 Personalized</div>
         </div>
       </div>
+
+      <QuizHistory />
     </div>
   )
 }

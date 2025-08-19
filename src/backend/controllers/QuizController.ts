@@ -184,4 +184,17 @@ export class QuizController {
     }
   };
 
+  getQuizHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const quizHistory = await this.quizService.getQuizHistory();
+      
+      res.json({
+        success: true,
+        data: quizHistory
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 }

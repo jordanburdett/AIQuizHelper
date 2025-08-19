@@ -1053,3 +1053,144 @@ body {
   margin: 16px 0;
   font-size: 14px;
 }
+
+/* Quiz History Component */
+.quiz-history-section {
+  margin-top: 48px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 20px;
+}
+
+.quiz-history-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  color: #64748b;
+}
+
+.quiz-history-error {
+  padding: 24px;
+  color: #ef4444;
+  background: #fee;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.quiz-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.quiz-history-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quiz-history-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.quiz-history-topic {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.quiz-history-date {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.quiz-history-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quiz-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz-score-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.quiz-score-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.score-high {
+  color: #10b981;
+}
+
+.score-medium {
+  color: #f59e0b;
+}
+
+.score-low {
+  color: #ef4444;
+}
+
+.quiz-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.quiz-questions,
+.quiz-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quiz-not-attempted {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quiz-status {
+  font-size: 14px;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0f2fe;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
