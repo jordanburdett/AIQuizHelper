@@ -1,9 +1,10 @@
 import { Question, QuizAttempt } from '@shared/types/Quiz';
-import { LLMProvider, StudyRecommendation } from '@shared/interfaces/LLMProvider';
+import { StudyRecommendation } from '@shared/types/User';
+import { LLMProvider } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
 
 export class MockLLMService implements LLMProvider {
-  async generateQuizQuestions(topic: string, count: number = 5, _effort?: 'speed' | 'balanced' | 'quality'): Promise<Question[]> {
+  async generateQuizQuestions(topic: string, count: number = 5, _effort?: 'speed' | 'balanced' | 'quality', _factCheckingContext?: string): Promise<Question[]> {
     // Mock implementation for testing/development
     const questions: Question[] = [];
     const possibleAnswers = ['a', 'b', 'c', 'd'];

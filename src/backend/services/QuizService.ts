@@ -6,13 +6,20 @@ import { QuizModel, QuizAttemptModel } from '../models/QuizModel';
 import { generateQuizId, generateAttemptId } from '../utils/idGenerator';
 import { GeminiService } from './GeminiService';
 import { MockLLMService } from './MockLLMService';
+import { FactCheckingService } from './FactCheckingService';
 import { config } from '../config/env';
 
 export class QuizService {
   private llmProvider: LLMProvider;
+  private factCheckingService: FactCheckingService;
 
   constructor(llmProvider?: LLMProvider) {
     this.llmProvider = llmProvider || this.createDefaultProvider();
+    this.factCheckingService = new FactCheckingService(
+      this.llmProvider,
+      config.wikipedia.maxArticles,
+      config.wikipedia.contentLimit
+    );
   }
 
   private createDefaultProvider(): LLMProvider {
@@ -25,18 +32,61 @@ export class QuizService {
     }
   }
 
-  async generateQuiz(topic: string, effort?: 'speed' | 'balanced' | 'quality'): Promise<Quiz> {
-    const questions = await this.llmProvider.generateQuizQuestions(topic, 5, effort);
+  async generateQuiz(
+    topic: string, 
+    effort?: 'speed' | 'balanced' | 'quality',
+    enableFactChecking?: boolean
+  ): Promise<Quiz> {
+    console.log(`\n🎯 [QuizService] Starting quiz generation`);
+    console.log(`📝 [QuizService] User prompt: "${topic}"`);
+    console.log(`⚙️ [QuizService] Settings:`, { effort: effort || 'default', enableFactChecking, wikipediaEnabled: config.wikipedia.enabled });
+    
+    let factCheckingContext: string | undefined;
+    let factCheckingSources: string[] = [];
+    
+    if (enableFactChecking && config.wikipedia.enabled) {
+      console.log(`\n🔍 [QuizService] Fact-checking is ENABLED - Starting Wikipedia fact-checking process`);
+      try {
+        const factCheckResult = await this.factCheckingService.getFactCheckingContext(topic);
+        if (factCheckResult.successful) {
+          factCheckingContext = factCheckResult.context;
+          factCheckingSources = factCheckResult.sources;
+          console.log(`✅ [QuizService] Fact-checking successful!`);
+          console.log(`📚 [QuizService] Wikipedia sources:`, factCheckingSources);
+          console.log(`📄 [QuizService] Context length: ${factCheckingContext.length} characters`);
+        } else {
+          console.log(`⚠️ [QuizService] Fact-checking returned no results`);
+        }
+      } catch (error) {
+        console.error('❌ [QuizService] Fact-checking failed, proceeding without context:', error);
+      }
+    } else {
+      console.log(`\n⏭️ [QuizService] Fact-checking is DISABLED - Proceeding without Wikipedia context`);
+    }
+
+    console.log(`\n🤖 [QuizService] Starting Gemini request for quiz generation`);
+    const questions = await this.llmProvider.generateQuizQuestions(topic, 5, effort, factCheckingContext);
+    console.log(`✅ [QuizService] Generated ${questions.length} questions successfully`);
     
     const quiz: Quiz = {
       id: generateQuizId(),
       topic,
       questions,
-      createdAt: new Date()
+      createdAt: new Date(),
+      factChecked: !!factCheckingContext,
+      factCheckingSources
     };
 
+    console.log(`\n💾 [QuizService] Saving quiz to database`);
     const quizModel = new QuizModel(quiz);
     await quizModel.save();
+    
+    console.log(`\n🎉 [QuizService] Quiz generation complete!`, {
+      quizId: quiz.id,
+      questionCount: quiz.questions.length,
+      factChecked: quiz.factChecked,
+      sourceCount: quiz.factCheckingSources?.length || 0
+    });
     
     return quiz;
   }
@@ -192,7 +242,7 @@ export class QuizService {
     try {
       const quizzes = await QuizModel
         .find({})
-        .select({ id: 1, topic: 1, createdAt: 1, questions: 1 })
+        .select({ id: 1, topic: 1, createdAt: 1, questions: 1, factChecked: 1, factCheckingSources: 1 })
         .sort({ createdAt: -1 })
         .limit(20)
         .exec();
@@ -223,6 +273,14 @@ export class QuizService {
           createdAt: quiz.createdAt,
           questionCount: quiz.questions?.length || 0
         };
+        
+        if (quiz.factChecked !== undefined) {
+          quizSummary.factChecked = quiz.factChecked;
+        }
+        
+        if (quiz.factCheckingSources !== undefined) {
+          quizSummary.factCheckingSources = quiz.factCheckingSources;
+        }
         
         const attempt = attemptMap.get(quiz.id);
         

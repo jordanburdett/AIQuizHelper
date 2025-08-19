@@ -87,7 +87,14 @@ export const QuizHistory = () => {
             onClick={() => handleQuizClick(quiz.id, latestAttempt?.id)}
           >
             <div className="quiz-history-header">
-              <h3 className="quiz-history-topic">{quiz.topic}</h3>
+              <h3 className="quiz-history-topic">
+                {quiz.topic}
+                {quiz.factChecked && (
+                  <span className="fact-checked-badge" title={`Fact-checked with ${quiz.factCheckingSources?.length || 0} Wikipedia sources`}>
+                    📚
+                  </span>
+                )}
+              </h3>
               <span className="quiz-history-date">
                 {formatDistanceToNow(new Date(quiz.createdAt), { addSuffix: true })}
               </span>

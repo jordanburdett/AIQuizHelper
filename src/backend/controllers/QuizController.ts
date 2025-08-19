@@ -12,7 +12,7 @@ export class QuizController {
 
   generateQuiz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { topic, effort } = req.body as GenerateQuizRequest;
+      const { topic, effort, enableFactChecking } = req.body as GenerateQuizRequest;
       
       if (!topic) {
         res.status(400).json({
@@ -22,7 +22,7 @@ export class QuizController {
         return;
       }
 
-      const quiz = await this.quizService.generateQuiz(topic, effort);
+      const quiz = await this.quizService.generateQuiz(topic, effort, enableFactChecking);
       
       res.json({
         success: true,

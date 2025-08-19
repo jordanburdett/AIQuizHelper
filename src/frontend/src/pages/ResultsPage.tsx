@@ -103,8 +103,55 @@ export const ResultsPage = () => {
         <div className="summary-list">
           <div className="summary-row"><span>Correct Answers</span><span>{correctAnswers}/{totalQuestions}</span></div>
           <div className="summary-row"><span>Time Taken</span><span>{attempt.timeTaken > 0 ? `${Math.round(attempt.timeTaken / 60)} minutes` : 'Not tracked'}</span></div>
+          {quizResponse?.success && quizResponse.data?.factChecked && (
+            <div className="summary-row fact-checked-row">
+              <span>📚 Fact-checked with Wikipedia</span>
+              <span className="fact-sources-count">{quizResponse.data.factCheckingSources?.length || 0} sources</span>
+            </div>
+          )}
         </div>
       </div>
+
+      {quizResponse?.success && quizResponse.data?.factChecked && quizResponse.data.factCheckingSources && quizResponse.data.factCheckingSources.length > 0 && (
+        <div className="card card-elevated" style={{ marginBottom: 16, background: '#f0fdf4', borderLeft: '4px solid #22c55e' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '1.5rem' }}>📚</span>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600', color: '#166534', marginBottom: '8px' }}>
+                Wikipedia Sources Used
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#15803d', marginBottom: '12px' }}>
+                This quiz was enhanced with fact-checking from the following Wikipedia articles:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {quizResponse.data.factCheckingSources.map((source, index) => (
+                  <a 
+                    key={index}
+                    href={`https://en.wikipedia.org/wiki/${encodeURIComponent(source.replace(/ /g, '_'))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-sm"
+                    style={{ 
+                      background: '#dcfce7', 
+                      color: '#166534', 
+                      border: '1px solid #86efac',
+                      padding: '6px 12px',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <span>📖</span> {source}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <StudyRecommendations 
         recommendations={recommendations}

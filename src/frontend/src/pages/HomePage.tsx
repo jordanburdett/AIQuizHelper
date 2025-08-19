@@ -8,6 +8,7 @@ import type { GenerateQuizRequest } from '@shared/interfaces/ApiResponses'
 
 export const HomePage = () => {
   const [topic, setTopic] = useState('')
+  const [enableFactChecking, setEnableFactChecking] = useState(false)
   const navigate = useNavigate()
 
   const generateQuizMutation = useMutation({
@@ -22,7 +23,10 @@ export const HomePage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (topic.trim()) {
-      generateQuizMutation.mutate({ topic: topic.trim() })
+      generateQuizMutation.mutate({ 
+        topic: topic.trim(),
+        enableFactChecking
+      })
     }
   }
 
@@ -51,6 +55,21 @@ export const HomePage = () => {
                   placeholder="e.g., JavaScript fundamentals, World War II, Calculus..."
                   className="form-input input-lg"
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={enableFactChecking}
+                    onChange={(e) => setEnableFactChecking(e.target.checked)}
+                    className="form-checkbox"
+                  />
+                  <span className="checkbox-text">
+                    📚 Enable Wikipedia fact-checking for more accurate questions
+                    <span className="checkbox-subtext">Uses Wikipedia articles to verify facts and enhance question quality</span>
+                  </span>
+                </label>
               </div>
 
               <button

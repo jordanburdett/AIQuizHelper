@@ -100,6 +100,36 @@ export const QuizPage = () => {
         <p className="hero-subtitle">Answer all questions to see results and get AI study recommendations.</p>
       </div>
       
+      {quiz.factChecked && quiz.factCheckingSources && quiz.factCheckingSources.length > 0 && (
+        <div className="card card-elevated" style={{ marginBottom: 16, background: '#f0fdf4', borderLeft: '4px solid #22c55e' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '1.5rem' }}>📚</span>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#166534', marginBottom: '8px' }}>
+                Enhanced with Wikipedia Fact-Checking
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#15803d', marginBottom: '8px' }}>
+                Questions verified using Wikipedia articles for improved accuracy:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.875rem', color: '#166534' }}>
+                {quiz.factCheckingSources.map((source, index) => (
+                  <li key={index} style={{ marginBottom: '4px' }}>
+                    <a 
+                      href={`https://en.wikipedia.org/wiki/${encodeURIComponent(source.replace(/ /g, '_'))}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#15803d', textDecoration: 'underline' }}
+                    >
+                      {source}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="card" style={{ marginBottom: 16, textAlign: 'center' }}>
         <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1a202c' }}>
           Time Elapsed: {elapsedMinutes}:{remainingSeconds.toString().padStart(2, '0')}

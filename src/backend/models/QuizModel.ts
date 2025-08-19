@@ -20,7 +20,9 @@ const quizSchema = new Schema<QuizDocument>({
   topic: { type: String, required: true },
   questions: [questionSchema],
   createdAt: { type: Date, default: Date.now },
-  userId: { type: String }
+  userId: { type: String },
+  factChecked: { type: Boolean, default: false },
+  factCheckingSources: [{ type: String }]
 });
 
 const quizAttemptSchema = new Schema<QuizAttemptDocument>({

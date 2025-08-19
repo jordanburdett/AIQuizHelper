@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Question, QuizAttempt } from '@shared/types/Quiz';
-import { LLMProvider, LLMConfig, StudyRecommendation } from '@shared/interfaces/LLMProvider';
+import { StudyRecommendation } from '@shared/types/User';
+import { LLMProvider, LLMConfig } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
 import { config as appConfig } from '../config/env';
 
@@ -23,8 +24,27 @@ export class GeminiService implements LLMProvider {
     this.genAI = new GoogleGenerativeAI(this.config.apiKey);
   }
 
-  async generateQuizQuestions(topic: string, count: number = 5, effort?: 'speed' | 'balanced' | 'quality'): Promise<Question[]> {
-    const prompt = this.buildQuestionPrompt(topic, count, effort);
+  async generateQuizQuestions(
+    topic: string, 
+    count: number = 5, 
+    effort?: 'speed' | 'balanced' | 'quality',
+    factCheckingContext?: string
+  ): Promise<Question[]> {
+    console.log(`\n🤖 [GeminiService] Preparing quiz generation request`);
+    console.log(`📝 [GeminiService] Topic: "${topic}"`);
+    console.log(`🔢 [GeminiService] Question count: ${count}`);
+    console.log(`⚡ [GeminiService] Effort level: ${effort || 'default'}`);
+    console.log(`📚 [GeminiService] Fact-checking context provided: ${!!factCheckingContext}`);
+    
+    if (factCheckingContext) {
+      console.log(`📄 [GeminiService] Fact-checking context length: ${factCheckingContext.length} characters`);
+    }
+    
+    const prompt = this.buildQuestionPrompt(topic, count, effort, factCheckingContext);
+    console.log(`\n📤 [GeminiService] Full prompt being sent to Gemini (${prompt.length} characters):\n`);
+    console.log('════════════════════════════════════════════════════════════════');
+    console.log(prompt);
+    console.log('════════════════════════════════════════════════════════════════\n');
     
     try {
       const model = this.genAI.getGenerativeModel({ 
@@ -35,6 +55,7 @@ export class GeminiService implements LLMProvider {
         }
       });
       
+      console.log(`⏳ [GeminiService] Sending request to Gemini model: ${this.config.model}`);
       const result = await model.generateContent(prompt);
       const response = result.response;
       const content = response.text();
@@ -43,16 +64,32 @@ export class GeminiService implements LLMProvider {
         throw new Error('No content received from Gemini');
       }
 
-      return this.parseQuestions(content);
+      console.log(`✅ [GeminiService] Received response from Gemini (${content.length} characters)`);
+      const questions = this.parseQuestions(content);
+      console.log(`📊 [GeminiService] Successfully parsed ${questions.length} questions`);
+      
+      return questions;
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error('❌ [GeminiService] Gemini API error:', error);
       throw new Error('Failed to generate quiz questions');
     }
   }
 
-  private buildQuestionPrompt(topic: string, count: number, effort?: 'speed' | 'balanced' | 'quality'): string {
+  private buildQuestionPrompt(
+    topic: string, 
+    count: number, 
+    effort?: 'speed' | 'balanced' | 'quality',
+    factCheckingContext?: string
+  ): string {
     const tone = effort === 'quality' ? 'Provide well-considered, high-quality questions.' : effort === 'speed' ? 'Favor brevity and straightforward questions.' : 'Balance speed and quality.';
-    return `Generate ${count} multiple choice questions about "${topic}". Each question should have 4 options (A, B, C, D) with exactly one correct answer.
+    
+    let basePrompt = `Generate ${count} multiple choice questions about "${topic}". Each question should have 4 options (A, B, C, D) with exactly one correct answer.`;
+    
+    if (factCheckingContext) {
+      basePrompt += `\n\nFactual Context from Wikipedia:\n${factCheckingContext}\n\nUse this context to ensure questions are factually accurate and well-grounded. Draw upon the provided information when creating questions.`;
+    }
+
+    return `${basePrompt}
 
 IMPORTANT: Randomize which option (a, b, c, or d) is correct for each question. Do not always make "a" the correct answer. Distribute correct answers evenly across all options.
 

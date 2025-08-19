@@ -4,6 +4,8 @@ export interface Quiz {
   questions: Question[];
   createdAt: Date;
   userId?: string;
+  factChecked?: boolean;
+  factCheckingSources?: string[];
 }
 
 export interface Question {

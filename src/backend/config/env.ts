@@ -17,5 +17,10 @@ export const config = {
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
     model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite'
+  },
+  wikipedia: {
+    enabled: process.env.WIKIPEDIA_FACT_CHECK_ENABLED === 'true',
+    maxArticles: parseInt(process.env.WIKIPEDIA_MAX_ARTICLES || '3'),
+    contentLimit: parseInt(process.env.WIKIPEDIA_CONTENT_LIMIT || '1000')
   }
 };

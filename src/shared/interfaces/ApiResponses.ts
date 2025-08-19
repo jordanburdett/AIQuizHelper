@@ -12,6 +12,7 @@ export interface GenerateQuizRequest {
   topic: string;
   difficulty?: 'easy' | 'medium' | 'hard';
   effort?: 'speed' | 'balanced' | 'quality';
+  enableFactChecking?: boolean;
 }
 
 export interface GenerateQuizResponse extends ApiResponse<Quiz> {}
@@ -55,6 +56,8 @@ export interface QuizHistorySummary {
   topic: string;
   createdAt: Date;
   questionCount: number;
+  factChecked?: boolean;
+  factCheckingSources?: string[];
 }
 
 export interface QuizHistoryItem {
