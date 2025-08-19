@@ -1,6 +1,7 @@
 {
   "name": "ai-quiz-helper",
   "version": "1.0.0",
+  "type": "module",
   "description": "AI-powered quiz generation and personalized study recommendations",
   "scripts": {
     "start": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
@@ -33,7 +34,7 @@
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -42,7 +43,10 @@
     "ts-jest": "^29.1.2",
     "tsx": "^4.7.1",
     "typescript": "^5.4.3",
-    "vite": "^5.2.0"
+    "vite": "^7.1.2"
+  },
+  "overrides": {
+    "esbuild": ">=0.24.4"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
