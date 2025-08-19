@@ -4,7 +4,7 @@ import { StudyRecommendation } from '@shared/types/User';
 import { LLMProvider, LLMConfig } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
 import { config as appConfig } from '../config/env';
-import { LLMPromptHandler } from './LLMPromptHandler';
+import { LLMPromptHandler } from '@shared/utils/LLMPromptHandler';
 
 export class GeminiService implements LLMProvider {
   private genAI: GoogleGenerativeAI;

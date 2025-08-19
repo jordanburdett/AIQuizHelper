@@ -2,7 +2,7 @@ import { Question, QuizAttempt } from '@shared/types/Quiz';
 import { StudyRecommendation } from '@shared/types/User';
 import { LLMProvider } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
-import { LLMPromptHandler } from './LLMPromptHandler';
+import { LLMPromptHandler } from '@shared/utils/LLMPromptHandler';
 
 export class MockLLMService implements LLMProvider {
   async generateQuizQuestions(topic: string, count: number = 5, _effort?: 'speed' | 'balanced' | 'quality', _factCheckingContext?: string): Promise<Question[]> {
