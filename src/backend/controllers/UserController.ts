@@ -8,7 +8,7 @@ export class UserController {
     this.quizService = new QuizService();
   }
 
-  getProgress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getProgress = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const progress = await this.quizService.getUserProgress();
       res.json({
@@ -20,7 +20,7 @@ export class UserController {
     }
   };
 
-  getRecommendations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getRecommendations = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       res.json({
         success: true,

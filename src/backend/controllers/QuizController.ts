@@ -170,7 +170,7 @@ export class QuizController {
     }
   };
 
-  getConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getConfig = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       res.json({
         success: true,
@@ -184,7 +184,7 @@ export class QuizController {
     }
   };
 
-  getQuizHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getQuizHistory = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const quizHistory = await this.quizService.getQuizHistory();
       

@@ -19,7 +19,7 @@ export class WikipediaService {
       const response = await this.makeRequest(searchUrl);
       return this.parseSearchResults(response);
     } catch (error) {
-      console.warn(`Wikipedia search failed for query "${query}":`, error);
+      console.warn(`❌ [WikipediaService] Search failed for query "${query}":`, error);
       return [];
     }
   }
@@ -30,7 +30,7 @@ export class WikipediaService {
       const response = await this.makeRequest(contentUrl);
       return this.parsePageContent(response);
     } catch (error) {
-      console.warn(`Wikipedia content retrieval failed for title "${title}":`, error);
+      console.warn(`❌ [WikipediaService] Content retrieval failed for title "${title}":`, error);
       return null;
     }
   }
@@ -116,5 +116,28 @@ export class WikipediaService {
       title: page.title,
       extract: page.extract || ''
     };
+  }
+
+  async gatherContentFromQueries(searchQueries: string[], maxArticles: number = 3, minContentLength: number = 50): Promise<WikipediaPageContent[]> {
+    const allContent: WikipediaPageContent[] = [];
+    
+    for (const query of searchQueries) {
+      if (allContent.length >= maxArticles) {
+        break;
+      }
+      
+      const searchResults = await this.searchArticles(query, 2);
+      
+      for (const result of searchResults) {
+        if (allContent.length >= maxArticles) break;
+        
+        const content = await this.getPageContent(result.title);
+        if (content && content.extract.length > minContentLength) {
+          allContent.push(content);
+        }
+      }
+    }
+    
+    return allContent;
   }
 }

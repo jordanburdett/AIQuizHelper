@@ -37,36 +37,22 @@ export class QuizService {
     effort?: 'speed' | 'balanced' | 'quality',
     enableFactChecking?: boolean
   ): Promise<Quiz> {
-    console.log(`\n🎯 [QuizService] Starting quiz generation`);
-    console.log(`📝 [QuizService] User prompt: "${topic}"`);
-    console.log(`⚙️ [QuizService] Settings:`, { effort: effort || 'default', enableFactChecking, wikipediaEnabled: config.wikipedia.enabled });
-    
     let factCheckingContext: string | undefined;
     let factCheckingSources: string[] = [];
     
     if (enableFactChecking && config.wikipedia.enabled) {
-      console.log(`\n🔍 [QuizService] Fact-checking is ENABLED - Starting Wikipedia fact-checking process`);
       try {
         const factCheckResult = await this.factCheckingService.getFactCheckingContext(topic);
         if (factCheckResult.successful) {
           factCheckingContext = factCheckResult.context;
           factCheckingSources = factCheckResult.sources;
-          console.log(`✅ [QuizService] Fact-checking successful!`);
-          console.log(`📚 [QuizService] Wikipedia sources:`, factCheckingSources);
-          console.log(`📄 [QuizService] Context length: ${factCheckingContext.length} characters`);
-        } else {
-          console.log(`⚠️ [QuizService] Fact-checking returned no results`);
         }
       } catch (error) {
         console.error('❌ [QuizService] Fact-checking failed, proceeding without context:', error);
       }
-    } else {
-      console.log(`\n⏭️ [QuizService] Fact-checking is DISABLED - Proceeding without Wikipedia context`);
     }
 
-    console.log(`\n🤖 [QuizService] Starting Gemini request for quiz generation`);
     const questions = await this.llmProvider.generateQuizQuestions(topic, 5, effort, factCheckingContext);
-    console.log(`✅ [QuizService] Generated ${questions.length} questions successfully`);
     
     const quiz: Quiz = {
       id: generateQuizId(),
@@ -77,28 +63,20 @@ export class QuizService {
       factCheckingSources
     };
 
-    console.log(`\n💾 [QuizService] Saving quiz to database`);
     const quizModel = new QuizModel(quiz);
     await quizModel.save();
-    
-    console.log(`\n🎉 [QuizService] Quiz generation complete!`, {
-      quizId: quiz.id,
-      questionCount: quiz.questions.length,
-      factChecked: quiz.factChecked,
-      sourceCount: quiz.factCheckingSources?.length || 0
-    });
     
     return quiz;
   }
 
   async getQuiz(quizId: string): Promise<Quiz | null> {
     const quiz = await QuizModel.findOne({ id: quizId });
-    return quiz?.toObject() || null;
+    return quiz ? { ...quiz.toObject(), id: quiz.id } : null;
   }
 
   async getQuizAttempt(attemptId: string): Promise<QuizAttempt | null> {
     const attempt = await QuizAttemptModel.findOne({ id: attemptId });
-    return attempt?.toObject() || null;
+    return attempt ? { ...attempt.toObject(), id: attempt.id } : null;
   }
 
   async submitQuizAttempt(

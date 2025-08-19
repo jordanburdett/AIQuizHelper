@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { Quiz, Question, QuizAttempt } from '@shared/types/Quiz';
 
-interface QuizDocument extends Quiz, Document {}
-interface QuizAttemptDocument extends QuizAttempt, Document {}
+interface QuizDocument extends Omit<Quiz, 'id'>, Document {}
+interface QuizAttemptDocument extends Omit<QuizAttempt, 'id'>, Document {}
 
 const questionSchema = new Schema<Question>({
   id: { type: String, required: true },

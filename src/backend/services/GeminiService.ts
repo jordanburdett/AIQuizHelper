@@ -4,6 +4,7 @@ import { StudyRecommendation } from '@shared/types/User';
 import { LLMProvider, LLMConfig } from '@shared/interfaces/LLMProvider';
 import { generateQuestionId } from '../utils/idGenerator';
 import { config as appConfig } from '../config/env';
+import { LLMPromptHandler } from './LLMPromptHandler';
 
 export class GeminiService implements LLMProvider {
   private genAI: GoogleGenerativeAI;
@@ -30,21 +31,7 @@ export class GeminiService implements LLMProvider {
     effort?: 'speed' | 'balanced' | 'quality',
     factCheckingContext?: string
   ): Promise<Question[]> {
-    console.log(`\n🤖 [GeminiService] Preparing quiz generation request`);
-    console.log(`📝 [GeminiService] Topic: "${topic}"`);
-    console.log(`🔢 [GeminiService] Question count: ${count}`);
-    console.log(`⚡ [GeminiService] Effort level: ${effort || 'default'}`);
-    console.log(`📚 [GeminiService] Fact-checking context provided: ${!!factCheckingContext}`);
-    
-    if (factCheckingContext) {
-      console.log(`📄 [GeminiService] Fact-checking context length: ${factCheckingContext.length} characters`);
-    }
-    
-    const prompt = this.buildQuestionPrompt(topic, count, effort, factCheckingContext);
-    console.log(`\n📤 [GeminiService] Full prompt being sent to Gemini (${prompt.length} characters):\n`);
-    console.log('════════════════════════════════════════════════════════════════');
-    console.log(prompt);
-    console.log('════════════════════════════════════════════════════════════════\n');
+    const prompt = LLMPromptHandler.buildQuestionPrompt(topic, count, effort, factCheckingContext);
     
     try {
       const model = this.genAI.getGenerativeModel({ 
@@ -55,7 +42,6 @@ export class GeminiService implements LLMProvider {
         }
       });
       
-      console.log(`⏳ [GeminiService] Sending request to Gemini model: ${this.config.model}`);
       const result = await model.generateContent(prompt);
       const response = result.response;
       const content = response.text();
@@ -64,60 +50,14 @@ export class GeminiService implements LLMProvider {
         throw new Error('No content received from Gemini');
       }
 
-      console.log(`✅ [GeminiService] Received response from Gemini (${content.length} characters)`);
       const questions = this.parseQuestions(content);
-      console.log(`📊 [GeminiService] Successfully parsed ${questions.length} questions`);
-      
       return questions;
     } catch (error) {
-      console.error('❌ [GeminiService] Gemini API error:', error);
+      console.error('❌ [GeminiService] Failed to generate quiz questions:', error);
       throw new Error('Failed to generate quiz questions');
     }
   }
 
-  private buildQuestionPrompt(
-    topic: string, 
-    count: number, 
-    effort?: 'speed' | 'balanced' | 'quality',
-    factCheckingContext?: string
-  ): string {
-    const tone = effort === 'quality' ? 'Provide well-considered, high-quality questions.' : effort === 'speed' ? 'Favor brevity and straightforward questions.' : 'Balance speed and quality.';
-    
-    let basePrompt = `Generate ${count} multiple choice questions about "${topic}". Each question should have 4 options (A, B, C, D) with exactly one correct answer.`;
-    
-    if (factCheckingContext) {
-      basePrompt += `\n\nFactual Context from Wikipedia:\n${factCheckingContext}\n\nUse this context to ensure questions are factually accurate and well-grounded. Draw upon the provided information when creating questions.`;
-    }
-
-    return `${basePrompt}
-
-IMPORTANT: Randomize which option (a, b, c, or d) is correct for each question. Do not always make "a" the correct answer. Distribute correct answers evenly across all options.
-
-Format your response as valid JSON with this exact structure:
-{
-  "questions": [
-    {
-      "question": "What is...?",
-      "options": [
-        {"id": "a", "text": "Option A text", "value": "a"},
-        {"id": "b", "text": "Option B text", "value": "b"},
-        {"id": "c", "text": "Option C text", "value": "c"},
-        {"id": "d", "text": "Option D text", "value": "d"}
-      ],
-      "correctAnswer": "b"
-    }
-  ]
-}
-
-Requirements:
-- Questions should be educational and appropriate difficulty
-- Each option should be plausible but only one correct
-- Use proper grammar and clear language
-- Make questions specific to the topic
-- VARY the correct answer position - use a, b, c, and d roughly equally
-- Return valid JSON only, no additional text
-- ${tone}`;
-  }
 
   private parseQuestions(content: string): Question[] {
     try {
@@ -139,13 +79,13 @@ Requirements:
         correctAnswer: q.correctAnswer
       }));
     } catch (error) {
-      console.error('Failed to parse Gemini response:', error);
+      console.error('❌ [GeminiService] Failed to parse quiz questions response:', error);
       throw new Error('Invalid response format from AI');
     }
   }
 
   async generateStudyRecommendations(quizAttempt: QuizAttempt, topic: string): Promise<StudyRecommendation[]> {
-    const prompt = this.buildRecommendationPrompt(quizAttempt, topic);
+    const prompt = LLMPromptHandler.buildRecommendationPrompt(quizAttempt, topic);
     
     try {
       const model = this.genAI.getGenerativeModel({ 
@@ -166,51 +106,11 @@ Requirements:
 
       return this.parseRecommendations(content);
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error('❌ [GeminiService] Failed to generate study recommendations:', error);
       throw new Error('Failed to generate study recommendations');
     }
   }
 
-  private buildRecommendationPrompt(quizAttempt: QuizAttempt, topic: string): string {
-    const correctAnswers = quizAttempt.answers.filter(a => a.isCorrect).length;
-    const totalQuestions = quizAttempt.answers.length;
-    const score = quizAttempt.score;
-    
-    const incorrectQuestions = quizAttempt.answers
-      .filter(a => !a.isCorrect)
-      .map(a => `Question ID: ${a.questionId}, Selected: ${a.selectedAnswer}`)
-      .join('\n');
-
-    return `Analyze this quiz performance and generate personalized study recommendations for the topic "${topic}".
-
-Quiz Performance:
-- Score: ${score}% (${correctAnswers}/${totalQuestions} correct)
-- Time taken: ${Math.round(quizAttempt.timeTaken / 1000)} seconds
-- Incorrect answers: ${incorrectQuestions || 'None - perfect score!'}
-
-Generate 3-5 study recommendations that help improve understanding of areas where the student struggled. Focus on specific subtopics and provide actionable study suggestions.
-
-For the "reason" field, use markdown formatting with **bold** for emphasis and proper structure.
-
-Format your response as valid JSON with this exact structure:
-{
-  "recommendations": [
-    {
-      "topic": "Specific subtopic to focus on",
-      "reason": "Why this area needs attention based on quiz performance", 
-      "resources": ["Specific study suggestion 1", "Specific study suggestion 2", "Specific study suggestion 3"],
-      "priority": "high"
-    }
-  ]
-}
-
-Requirements:
-- Use priority levels: "high" for critical gaps, "medium" for improvement areas, "low" for advanced topics
-- Make resources specific and actionable (not just "study more")
-- Base recommendations on actual performance gaps
-- If score is perfect, suggest advanced topics to explore next
-- Return valid JSON only, no additional text`;
-  }
 
   private parseRecommendations(content: string): StudyRecommendation[] {
     try {
@@ -228,41 +128,40 @@ Requirements:
         priority: ['high', 'medium', 'low'].includes(rec.priority) ? rec.priority : 'medium'
       }));
     } catch (error) {
-      console.error('Failed to parse Gemini recommendations response:', error);
+      console.error('❌ [GeminiService] Failed to parse study recommendations response:', error);
       throw new Error('Invalid recommendation response format from AI');
     }
   }
 
+  async generateSearchQueries(topic: string): Promise<string[]> {
+    const prompt = LLMPromptHandler.buildSearchQueryPrompt(topic);
+
+    try {
+      const model = this.genAI.getGenerativeModel({ 
+        model: this.config.model,
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 100,
+        }
+      });
+      
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+      
+      const cleaned = response.trim().replace(/^Search terms:\s*/i, '');
+      return cleaned
+        .split(';')
+        .map(term => term.trim())
+        .filter(term => term.length > 0)
+        .slice(0, 3);
+    } catch (error) {
+      console.warn('❌ [GeminiService] Search query generation failed, using original topic:', error);
+      return [topic];
+    }
+  }
+
   async generateQuestionExplanation(question: Question, topic: string): Promise<string> {
-    const prompt = `
-You are a helpful tutor explaining a quiz question about ${topic}.
-
-Question: ${question.question}
-
-Options:
-${question.options.map(opt => `${opt.value.toUpperCase()}: ${opt.text}`).join('\n')}
-
-Correct Answer: ${question.correctAnswer.toUpperCase()}
-
-Please provide a clear, well-formatted explanation using markdown. Structure your response as follows:
-
-## Correct Answer: ${question.correctAnswer.toUpperCase()}
-
-Explain why this is correct.
-
-## Why Other Options Are Incorrect:
-
-- **Option X**: Explanation
-- **Option Y**: Explanation  
-- **Option Z**: Explanation
-
-## Key Concepts:
-
-- Important concept 1
-- Important concept 2
-
-Use **bold** for emphasis, \`code formatting\` for code examples, and proper line breaks between sections.
-`;
+    const prompt = LLMPromptHandler.buildQuestionExplanationPrompt(question, topic);
 
     try {
       const model = this.genAI.getGenerativeModel({ 
@@ -283,7 +182,7 @@ Use **bold** for emphasis, \`code formatting\` for code examples, and proper lin
 
       return explanation.trim();
     } catch (error) {
-      console.error('Failed to generate question explanation:', error);
+      console.error('❌ [GeminiService] Failed to generate question explanation:', error);
       throw new Error('Failed to generate explanation for question');
     }
   }
