@@ -12,14 +12,10 @@ export const config = {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/aiquizhelper'
   },
   llm: {
-    provider: process.env.LLM_PROVIDER || 'mock'
-  },
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY || '',
-    model: process.env.OPENAI_MODEL || 'gpt-5-nano'
+    provider: process.env.LLM_PROVIDER || 'gemini'
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
-    model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp'
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite'
   }
 };

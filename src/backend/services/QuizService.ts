@@ -3,7 +3,6 @@ import { UserProgress, StudyRecommendation } from '@shared/types/User';
 import { LLMProvider } from '@shared/interfaces/LLMProvider';
 import { QuizModel, QuizAttemptModel } from '../models/QuizModel';
 import { generateQuizId, generateAttemptId } from '../utils/idGenerator';
-import { OpenAIService } from './OpenAIService';
 import { GeminiService } from './GeminiService';
 import { MockLLMService } from './MockLLMService';
 import { config } from '../config/env';
@@ -17,8 +16,6 @@ export class QuizService {
 
   private createDefaultProvider(): LLMProvider {
     switch (config.llm.provider) {
-      case 'openai':
-        return new OpenAIService();
       case 'gemini':
         return new GeminiService();
       case 'mock':

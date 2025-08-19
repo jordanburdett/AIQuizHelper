@@ -172,35 +172,11 @@ export class QuizController {
 
   getConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const availableProviders = [];
-      
-      // Always include Gemini as default
-      if (config.gemini.apiKey) {
-        availableProviders.push({
-          id: 'gemini',
-          name: 'Gemini',
-          model: 'gemini-2.5-flash-lite'
-        });
-      }
-      
-      if (config.openai.apiKey) {
-        availableProviders.push({
-          id: 'openai',
-          name: 'OpenAI',
-          model: 'gpt-5-nano'
-        });
-      }
-      
-      // Default to gemini if available, otherwise first available provider
-      const defaultProvider = availableProviders.find(p => p.id === 'gemini') || availableProviders[0];
-      
       res.json({
         success: true,
         data: {
-          currentProvider: config.llm.provider,
-          availableProviders,
-          defaultProvider: defaultProvider?.id || 'gemini',
-          showModelSelector: availableProviders.length > 1
+          provider: 'gemini',
+          model: config.gemini.model
         }
       });
     } catch (error) {
@@ -208,46 +184,4 @@ export class QuizController {
     }
   };
 
-  setProvider = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { provider } = req.body;
-      
-      if (!provider || !['gemini', 'openai'].includes(provider)) {
-        res.status(400).json({
-          success: false,
-          error: 'Invalid provider. Must be "gemini" or "openai"'
-        });
-        return;
-      }
-
-      // Verify the provider has a valid API key
-      if (provider === 'gemini' && !config.gemini.apiKey) {
-        res.status(400).json({
-          success: false,
-          error: 'Gemini API key not configured'
-        });
-        return;
-      }
-
-      if (provider === 'openai' && !config.openai.apiKey) {
-        res.status(400).json({
-          success: false,
-          error: 'OpenAI API key not configured'
-        });
-        return;
-      }
-
-      // Update the config (this is temporary, doesn't persist)
-      config.llm.provider = provider;
-
-      res.json({
-        success: true,
-        data: {
-          currentProvider: provider
-        }
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
 }

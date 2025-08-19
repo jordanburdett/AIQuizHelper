@@ -46,18 +46,6 @@ export interface GenerateRecommendationsResponse extends ApiResponse<StudyRecomm
 export interface GetQuestionExplanationResponse extends ApiResponse<{ explanation: string }> {}
 
 export interface GetConfigResponse extends ApiResponse<{
-  currentProvider: string;
-  availableProviders: Array<{
-    id: string;
-    name: string;
-    model: string;
-  }>;
-  defaultProvider: string;
-  showModelSelector: boolean;
-}> {}
-
-export interface SetProviderRequest {
   provider: string;
-}
-
-export interface SetProviderResponse extends ApiResponse<{ currentProvider: string }> {}
+  model: string;
+}> {}

@@ -10,9 +10,7 @@ import type {
   GetRecommendationsResponse,
   GenerateRecommendationsResponse,
   GetQuestionExplanationResponse,
-  GetConfigResponse,
-  SetProviderRequest,
-  SetProviderResponse
+  GetConfigResponse
 } from '@shared/interfaces/ApiResponses'
 
 const apiClient = axios.create({
@@ -55,11 +53,6 @@ export const quizApi = {
 
   getConfig: async (): Promise<GetConfigResponse> => {
     const response = await apiClient.get<GetConfigResponse>('/quiz/config')
-    return response.data
-  },
-
-  setProvider: async (request: SetProviderRequest): Promise<SetProviderResponse> => {
-    const response = await apiClient.post<SetProviderResponse>('/quiz/config/provider', request)
     return response.data
   },
 }
