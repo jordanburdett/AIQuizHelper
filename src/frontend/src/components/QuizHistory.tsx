@@ -1,14 +1,31 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { quizApi } from '../services/apiClient'
 import { formatDistanceToNow } from 'date-fns'
+import { useState } from 'react'
 
 export const QuizHistory = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [generatingForTopic, setGeneratingForTopic] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['quizHistory'],
     queryFn: quizApi.getQuizHistory,
+  })
+
+  const generateQuizMutation = useMutation({
+    mutationFn: (topic: string) => quizApi.generateQuiz({ topic }),
+    onSuccess: (response) => {
+      if (response.success && response.data) {
+        queryClient.invalidateQueries({ queryKey: ['quizHistory'] })
+        navigate(`/quiz/${response.data.id}`)
+      }
+      setGeneratingForTopic(null)
+    },
+    onError: () => {
+      setGeneratingForTopic(null)
+    },
   })
 
   const handleQuizClick = (quizId: string, attemptId?: string) => {
@@ -17,6 +34,17 @@ export const QuizHistory = () => {
     } else {
       navigate(`/quiz/${quizId}`)
     }
+  }
+
+  const handleRetryQuiz = (e: React.MouseEvent, quizId: string) => {
+    e.stopPropagation()
+    navigate(`/quiz/${quizId}`)
+  }
+
+  const handleNewQuestions = (e: React.MouseEvent, topic: string, quizId: string) => {
+    e.stopPropagation()
+    setGeneratingForTopic(quizId)
+    generateQuizMutation.mutate(topic)
   }
 
   if (isLoading) {
@@ -74,7 +102,6 @@ export const QuizHistory = () => {
                   </span>
                 </div>
                 <div className="quiz-meta">
-                  <span className="quiz-questions">{quiz.questionCount} questions</span>
                   {latestAttempt.timeTaken > 0 && (
                     <span className="quiz-time">{Math.round(latestAttempt.timeTaken / 60)} min</span>
                   )}
@@ -84,10 +111,26 @@ export const QuizHistory = () => {
               <div className="quiz-history-stats">
                 <div className="quiz-not-attempted">
                   <span className="quiz-status">Not attempted yet</span>
-                  <span className="quiz-questions">{quiz.questionCount} questions</span>
                 </div>
               </div>
             )}
+            
+            <div className="quiz-history-actions">
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={(e) => handleRetryQuiz(e, quiz.id)}
+                disabled={generatingForTopic !== null}
+              >
+                Retry
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={(e) => handleNewQuestions(e, quiz.topic, quiz.id)}
+                disabled={generatingForTopic !== null}
+              >
+                {generatingForTopic === quiz.id ? 'Generating...' : 'New Questions'}
+              </button>
+            </div>
           </div>
         ))}
       </div>

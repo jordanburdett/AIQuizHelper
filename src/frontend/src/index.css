@@ -1194,3 +1194,22 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* Quiz History Actions */
+.quiz-history-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.quiz-history-actions .btn-sm {
+  flex: 1;
+}
